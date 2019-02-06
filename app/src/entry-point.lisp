@@ -441,6 +441,15 @@ HTTP server for good.
           (print-2Q-gate-depth lschedule)))
       
       (when (and *protoquil* *compute-matrix-reps*)
-        (print-matrix-representations processed-program original-matrix))
+        (let* ((processed-program-matrix (quil::gate-applications-to-logical-matrix processed-program :compress-qubits t))
+               (same-same-but-different (quil::scale-out-matrix-phases processed-program-matrix
+                                                                       original-matrix)))
+          (format *human-readable-stream* "~%#Matrix read off from input code~%")
+          (print-matrix-with-comment-hashes original-matrix *human-readable-stream*)
+          (format *human-readable-stream* "~%#Matrix read off from compiled code~%")
+          (print-matrix-with-comment-hashes same-same-but-different *human-readable-stream*)
+          (format *human-readable-stream* "~%")
+          (format *human-readable-stream* "#Matrices are~a equal~%" (if (quil::matrix-equals-dwim original-matrix same-same-but-different) "" " not"))
+          (finish-output *human-readable-stream*)))
       
       (publish-json-statistics))))
